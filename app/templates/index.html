@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elevator Status Detection — AI-Powered Analysis</title>
+    <meta name="description" content="Upload elevator images or videos for real-time status detection powered by YOLOv8 deep learning.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__icon">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="2" width="18" height="20" rx="2"/>
+                    <line x1="12" y1="6" x2="12" y2="10"/>
+                    <polyline points="9 8 12 5 15 8"/>
+                    <line x1="12" y1="14" x2="12" y2="18"/>
+                    <polyline points="9 16 12 19 15 16"/>
+                </svg>
+            </div>
+            <h1 class="header__title">Elevator Status Detection</h1>
+            <p class="header__subtitle">AI-powered analysis using deep learning</p>
+        </header>
+
+        <!-- Upload Card -->
+        <div class="card">
+            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                <!-- Dropzone -->
+                <div class="dropzone" id="dropzone">
+                    <input type="file" name="file" id="fileInput" class="dropzone__input" accept=".png,.jpg,.jpeg,.mp4" required>
+
+                    <svg class="dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+
+                    <div class="dropzone__text">
+                        <strong>Drag &amp; drop</strong> your file here
+                        <span class="dropzone__or">or</span>
+                    </div>
+                    <button type="button" class="btn" id="browseBtn">Browse Files</button>
+                </div>
+
+                <!-- File Preview -->
+                <div class="preview" id="preview">
+                    <img class="preview__thumb" id="previewThumb" src="" alt="Preview" style="display:none;">
+                    <div class="preview__icon" id="previewIcon" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
+                    <div class="preview__info">
+                        <div class="preview__name" id="previewName"></div>
+                        <div class="preview__size" id="previewSize"></div>
+                    </div>
+                    <button type="button" class="preview__remove" id="removeBtn" title="Remove file">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Upload Button -->
+                <button type="submit" class="btn btn--block" id="uploadBtn" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Analyze with AI
+                </button>
+            </form>
+
+            <!-- Accepted Formats -->
+            <div class="formats">
+                <span class="formats__badge">PNG</span>
+                <span class="formats__badge">JPG</span>
+                <span class="formats__badge">JPEG</span>
+                <span class="formats__badge">MP4</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Powered by <a href="https://docs.ultralytics.com/" target="_blank" rel="noopener">YOLOv8</a> &amp; Flask
+        </footer>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-overlay__text">Analyzing your file…</div>
+        <div class="loading-overlay__subtext">This may take a moment for videos</div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const preview = document.getElementById('preview');
+        const previewThumb = document.getElementById('previewThumb');
+        const previewIcon = document.getElementById('previewIcon');
+        const previewName = document.getElementById('previewName');
+        const previewSize = document.getElementById('previewSize');
+        const removeBtn = document.getElementById('removeBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Browse button
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        // Click anywhere on dropzone
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        // Drag events
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dropzone--active');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dropzone--active');
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                showPreview(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) showPreview(fileInput.files[0]);
+        });
+
+        // Show file preview
+        function showPreview(file) {
+            previewName.textContent = file.name;
+            previewSize.textContent = formatSize(file.size);
+            preview.classList.add('preview--visible');
+            uploadBtn.disabled = false;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewThumb.src = e.target.result;
+                    previewThumb.style.display = 'block';
+                    previewIcon.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewThumb.style.display = 'none';
+                previewIcon.style.display = 'flex';
+            }
+        }
+
+        // Remove file
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.value = '';
+            preview.classList.remove('preview--visible');
+            previewThumb.style.display = 'none';
+            previewIcon.style.display = 'none';
+            uploadBtn.disabled = true;
+        });
+
+        // Format bytes
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // Submit — show loading
+        uploadForm.addEventListener('submit', () => {
+            loadingOverlay.classList.add('loading-overlay--visible');
+        });
+    </script>
+</body>
+</html>

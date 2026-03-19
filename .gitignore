@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+Datasets/
+Weights & Code/
+*.pt
+*.pth
+
+uploads/
+.env
