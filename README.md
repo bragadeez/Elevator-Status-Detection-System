@@ -29,8 +29,8 @@ The solution combines object detection and classification techniques to deliver 
 ---
 
 ## Project Structure
-
-elevator-monitoring-system/
+```text
+elevator-status-detection-system/
 │
 ├── app/
 │ ├── app.py
@@ -45,7 +45,7 @@ elevator-monitoring-system/
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
-
+```
 ---
 
 ## Model Details
@@ -64,27 +64,28 @@ elevator-monitoring-system/
 ## Setup Instructions
 
 ### 1. Clone the Repository
-
+```bash
 git clone https://github.com/bragadeez/elevator-monitoring-system.git
-
 cd elevator-monitoring-system
+```
 
 ### 2. Install Dependencies
-
+```bash
 pip install -r requirements.txt
-
+```
 ### 3. Request Model Weights
 
 The trained model file is not included due to size constraints.
+
 Mail me at bragadeeshwaranc@gmail.com to acquire the model weights
 
 ---
 
 ## Running the Application
-
+```bash
 cd app
 python app.py
-
+```
 ---
 
 ## Usage
@@ -124,7 +125,6 @@ python app.py
 ## Author
 
 **Bragadeeshwaran C**  
-Machine Learning Engineer | Computer Vision | GenAI
 
 - GitHub: https://github.com/bragadeez
 - LinkedIn: https://www.linkedin.com/in/bragadeeshwaran-c-107a05275/
